@@ -4,6 +4,11 @@ var svgCaptcha = require('svg-captcha');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 let myT=require(path.join(__dirname,"tools/myT.js"));
+let indexRoute= require(path.join(__dirname,"route/indexRoute.js"));//引入上面写好的路由模块
+
+
+
+
 
 //创建app
 let app = express();
@@ -18,6 +23,13 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(session({
     secret: 'keyboard cat'//必选项 自定义秘钥
 }))
+
+//index.html中间件
+app.set('views', './statics/views');//*设置目录
+//*注册 art-template 为express中的模板引擎
+app.engine('html', require('express-art-template'));
+app.use('/index', indexRoute);//使用路由模块 （一级路径名，自己模块
+
 
 //显示login.html 路由
 app.get("/login",(req,res)=>{
@@ -59,14 +71,6 @@ app.post("/login",(req,res)=>{
     }
 });
 
-//index.html
-app.get("/index",(req,res)=>{
-    if(req.session.userInfo){
-        res.sendFile(path.join(__dirname,"statics/views/index.html"));
-    }else{
-        myT.mess(res,'请先登陆！','/login');
-    }
-});
 
 //退出
 app.get("/logout",(req,res)=>{

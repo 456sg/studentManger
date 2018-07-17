@@ -2,13 +2,10 @@
 const MongoClient = require('mongodb').MongoClient;
 
 // 数据库地址
-const url = 'mongodb://localhost:27017';
+const url = 'mongodb://127.0.0.1:27017';
 
 // 
 const dbName = 'studentManager';
-
-
-
 
 // 暴露出去
 // es6的快速赋值
@@ -19,7 +16,7 @@ module.exports = {
         response.send(`<script>alert("${mess}");window.location="${url}"</script>`);
     },
     // 提供对应的方法
-    // 查询
+    // 查询 集合名（表名） 以记录中的某一字段作为条件 回调函数
     find(collectionName,query,callback){
         MongoClient.connect(url,{ useNewUrlParser: true }, function (err, client) {
             // 使用某个库
@@ -32,7 +29,7 @@ module.exports = {
             })
         });
     },
-    // // 新增
+    // // 新增 集合名（表名） 插入的对象（插入的一条记录） 回调函数
     insert(collectionName,doc,callback){
         MongoClient.connect(url,{ useNewUrlParser: true }, function (err, client) {
             // 使用某个库
@@ -43,6 +40,29 @@ module.exports = {
                // 传递出去
                callback(err,result);
            })
+        });
+    },
+    //删除 集合名（表名） 需要删除的对象{a : 3}(记录)  回调函数
+    delete(collectionName,query,callback){
+        MongoClient.connect(url,{ useNewUrlParser: true }, function (err, client) {
+            // 使用某个库
+            const db = client.db(dbName);
+           // 新增逻辑
+           db.collection(collectionName).deleteOne(query,(err,result)=>{
+               client.close();
+               // 传递出去
+               callback(err,result);
+           })
+        });
+    },
+    //更新 表名 需要更新的记录的某一字段作为条件 修改后的内容 回调函数
+    update(collectionName,query,doc,callback){      
+        MongoClient.connect(url,{ useNewUrlParser: true }, function (err, client) {
+            const db = client.db(dbName);
+            db.collection(collectionName).updateOne(query,{ $set: doc } , (err, result)=>{
+                client.close();
+                callback(err, result);
+            });
         });
     }
 }
