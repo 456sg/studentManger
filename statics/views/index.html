@@ -236,12 +236,15 @@ $(function () {
         $(".listbox").show();
         $(".addbox").hide();
     })
+    //点击编辑1
     $(".listbox tbody").on("click","a.btn-success",function (e) {
+        console.log("点击编辑"+$(this).parent().parent().data("id"));
         e.preventDefault();
         $(".listbox .addbtn").click();
         $(".savebtn").html("保存");
         var id=$(this).parent().parent().data("id");
         $('.savebtn').attr('data-id',id);
+        console.log("点击编辑后变为"+ $('.savebtn').attr('data-id'));
         $.ajax({
             url:"/index/search",
             data:{id},
@@ -251,14 +254,15 @@ $(function () {
                 let date=response.list[0];
                 for (const key in date) {
                     $(`.addbox form [name=${key}]`).val(date[key]);
+                    // $('.savebtn').attr('data-id',date._id);
                 }
             }
         })
     })
 
-    //点击新增
+    
     $(".savebtn").click(function () { 
-        if($(this).html()=="新增"){
+        if($(this).html()=="新增"){//点击新增
             $.ajax({
                 url:"/index/insert",
                 data:$(".addbox form").serialize(),
@@ -269,17 +273,20 @@ $(function () {
                     render();
                 }
             })
-        }else{
+        }else{//点击保存
+            console.log("保存"+$(this).data("id"));
             let data=$(".addbox form").serialize();
-            data+=`&id=${$(".savebtn").data("id")}`;
+            data+=`&id=${$(this).attr('data-id')}`;
+            console.log(data);
             $.ajax({
                 url:"/index/update",
                 data:data,
                 type:"get",
                 success:function(response){
                     console.log(response);
-                    $(".canbtn").click();
                     render();
+                    $(".canbtn").click();
+                    
                 }
             })
         }
