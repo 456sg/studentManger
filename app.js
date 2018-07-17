@@ -3,8 +3,9 @@ let path=require("path");
 var svgCaptcha = require('svg-captcha');
 var session = require('express-session');
 var bodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient;
+let myT=require(path.join(__dirname,"tools/myT.js"));
 
+//创建app
 let app = express();
 
 //静态资源中间件
@@ -17,12 +18,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(session({
     secret: 'keyboard cat'//必选项 自定义秘钥
 }))
-
-// Connection URL
-const url = 'mongodb://localhost:27017';
- 
-// Database Name
-const dbName = 'studentManager';
 
 //显示login.html 路由
 app.get("/login",(req,res)=>{
@@ -41,19 +36,26 @@ app.get('/login/captcha', function (req, res) {
 
 //接收登陆表单 路由
 app.post("/login",(req,res)=>{
+    let userName=req.body.userName;
+    let userPass=req.body.userPass;
     if(req.session.captcha==req.body.code){
         // console.log("验证success");
-        //如果登陆成功，把账号和密码保存在 session中
-        let userName=req.body.userName;
-        let userPass=req.body.userPass;
-        req.session.userInfo={
-            userName,
-            userPass
-        };
-        res.sendFile(path.join(__dirname,"statics/views/index.html"));
+        myT.find('userInfo',{userName},(err,docs)=>{
+            if(!err){
+                if(docs.length==1){
+                    //如果登陆成功，把账号和密码保存在 session中
+                    req.session.userInfo={
+                        userName
+                    };
+                    res.redirect('/index');
+                }else{
+                    myT.mess(res,'用户名或密码错误','/login');
+                }
+            }
+        });
+       
     }else{
-        res.setHeader("content-type","text/html");
-        res.send("<script>alert('验证码错误！');window.location.href='/login'</script>")
+        myT.mess(res,'验证码错误！','/login');
     }
 });
 
@@ -62,8 +64,7 @@ app.get("/index",(req,res)=>{
     if(req.session.userInfo){
         res.sendFile(path.join(__dirname,"statics/views/index.html"));
     }else{
-        res.setHeader("content-type","text/html");
-        res.send("<script>alert('请先登陆！');window.location.href='/login'</script>")
+        myT.mess(res,'请先登陆！','/login');
     }
 });
 
@@ -82,29 +83,16 @@ app.get("/register",(req,res)=>{
 app.post("/register",(req,res)=>{
     let userName=req.body.userName;
     let userPass=req.body.userPass;
-    MongoClient.connect(url, function(err, client) {
-        const db = client.db(dbName);
-        const collection = db.collection('userInfo');
-        collection.find({userName}).toArray(function(err, docs) {
-            if(docs.length==0){
-                collection.insertOne({
-                    userName,
-                    userPass
-                },(err,result)=>{
-                    console.log(err);
-                    // 注册成功了
-                    res.setHeader('content-type','text/html');
-                    res.send("<script>alert('登陆成功！');window.location='/login'</script>")
-                    // 关闭数据库连接即可
-                    client.close();
-                })
-            }else{
-                res.setHeader('content-type','text/html');
-                res.send("<script>alert('用户名相同！');window.location='/register'</script>")
-            }
-            
-        });
-    });
+    myT.find('userInfo',{userName},(err,docs)=>{
+        if(docs.length==0){
+            myT.insert('userInfo',{userName,userPass},(err,result)=>{
+                console.log(err);
+                if(!err)myT.mess(res,'注册成功！','/login');
+            });
+        }else{
+            myT.mess(res,'用户名已存在！','/register');
+        }
+    })
 })
 
 //监听

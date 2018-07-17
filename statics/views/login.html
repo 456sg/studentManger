@@ -80,7 +80,16 @@
 </html>
 <script src="../lib/js/jquery-1.12.4.js"></script>
 <script src="../lib/js/bootstrap.min.js"></script>
+<script src="../lib/js/jquery.md5.js"></script>
 <script>
+    $("form button[type=submit]").click(function (e) {  
+        // e.preventDefault();
+        var oldP=$("#userPass").val();
+        var md5 = $.md5(oldP);
+        $("#userPass").val(md5);
+        console.log($("#userPass").val());
+    })
+    
     $(".code-img").click(function () {  
         $(this).attr("src",$(this).attr("src")+"?"+Math.random)
     })
