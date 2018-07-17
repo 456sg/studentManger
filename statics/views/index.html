@@ -8,20 +8,13 @@
     <title>后台管理</title>
     <link rel="stylesheet" href="../lib/css/bootstrap.min.css">
     <style>
-        /* html,
-        body {
-            width: 100%;
-            height: 100%;
-        }
-
-        .container {}
-
-        .row {} */
-
         .navbar-right .logout {
             font-size: 16px;
             color: red;
             font-weight: bold;
+        }
+        .addbox{
+            display: none;
         }
     </style>
 </head>
@@ -67,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="col-md-9">
+            <div class="col-md-9 listbox">
                 <div class="panel panel-default ">
                     <div class="panel-heading">
                         <ol class="breadcrumb">
@@ -86,11 +79,11 @@
                                 <label class="sr-only" for="exampleInputAmount">Amount (in dollars)</label>
                                 <div class="input-group">
                                     <div class="input-group-addon">学生姓名</div>
-                                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="请输入学生姓名进行查询">
+                                    <input name="userName" type="text" class="form-control" id="exampleInputAmount" placeholder="请输入学生姓名进行查询">
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success">查找</button>
-                            <button type="submit" class="btn btn-success">新增</button>
+                            <a href="javascript:void(0)" class="btn btn-success searchbtn">查找</a>
+                            <a href="javascript:void(0)" class="btn btn-success addbtn">新增</a>
                         </form>
                     </div>
                     <div class="panel-body">
@@ -120,6 +113,68 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-9 addbox">
+                <div class="panel panel-default ">
+                    <div class="panel-heading">
+                        <ol class="breadcrumb">
+                            <li>
+                                <a href="#">首页</a>
+                            </li>
+                            <li>
+                                <a href="#">学生管理</a>
+                            </li>
+                            <li class="active">学生列表</li>
+                        </ol>
+                    </div>
+                    <div class="panel-body">
+                        <form action="" method="post" class="form-horizontal">
+                            <div class="form-group">
+                                <label for="vtitle" class="col-sm-2 control-label">姓名</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" name="name" id="name" placeholder="请输入姓名">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vsortno" class="col-sm-2 control-label">年龄</label>
+                                <div class="col-sm-10">
+                                    <input type="Number" class="form-control" name="age" id="age" placeholder="请输入年龄">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vvideoid" class="col-sm-2 control-label">性别</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" name="sex" id="sex" placeholder="请输入性别">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vsummary" class="col-sm-2 control-label">电话</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" name="phone" id="phone" placeholder="请输入电话">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vimg" class="col-sm-2 control-label">地址</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" name="address" id="address" placeholder="请输入地址">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="vremark" class="col-sm-2 control-label">简介</label>
+                                <div class="col-sm-10">
+                                    <textarea style="width: 550px;height: 220px" name="introduction" placeholder="请输入简介"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <a href="javascript:void(0)" class="btn btn-default savebtn">保存</a>
+                                    <a href="javascript:void(0)" class="btn btn-default canbtn">取消</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -128,3 +183,138 @@
 </html>
 <script src="../lib/js/jquery-1.12.4.js"></script>
 <script src="../lib/js/bootstrap.min.js"></script>
+<script>
+$(function () {  
+    //点击查询
+    $(".searchbtn").click(function () {  
+        $.ajax({
+            url:"/index/search",
+            data:{userName:$(".listbox input[name=userName]").val()},
+            type:"get",
+            success:function(response){
+                console.log(response);
+                let html="";
+                for(var i=0;i<response.list.length;i++){
+                    html+=`
+                    <tr data-id='${response.list[i]._id}'>
+                        <td>${response.list[i].name}</td>
+                        <td>${response.list[i].age}</td>
+                        <td>${response.list[i].sex}</td>
+                        <td>${response.list[i].phone}</td>
+                        <td>
+                            <a href="#" class="btn-success btn-sm">编辑</a>
+                            <a href="#" class="btn-danger btn-sm">删除</a>
+                        </td>
+                    </tr>`;
+                }
+                $(".listbox tbody").html(html);
+            }
+        })
+    })
+
+
+    //点击删除
+    $(".listbox tbody").on("click","a.btn-danger",function (e) {  
+        e.preventDefault();
+        $.ajax({
+            url: "/index/delte",
+            data:{id:$(this).parent().parent().data("id")},
+            type: "get",
+            success: function (response) {
+                render();
+            }
+        })
+    })
+
+    //点击切换
+    $(".listbox .addbtn").click(function () {  
+        $(".listbox").hide();
+        $(".addbox").show();
+        $(".savebtn").html("新增");
+    })
+    $(".canbtn").click(function () {  
+        $(".listbox").show();
+        $(".addbox").hide();
+    })
+    $(".listbox tbody").on("click","a.btn-success",function (e) {
+        e.preventDefault();
+        $(".listbox .addbtn").click();
+        $(".savebtn").html("保存");
+        var id=$(this).parent().parent().data("id");
+        $('.savebtn').attr('data-id',id);
+        $.ajax({
+            url:"/index/search",
+            data:{id},
+            type:"get",
+            success:function(response){
+                console.log(response);
+                let date=response.list[0];
+                for (const key in date) {
+                    $(`.addbox form [name=${key}]`).val(date[key]);
+                }
+            }
+        })
+    })
+
+    //点击新增
+    $(".savebtn").click(function () { 
+        if($(this).html()=="新增"){
+            $.ajax({
+                url:"/index/insert",
+                data:$(".addbox form").serialize(),
+                type:"get",
+                success:function(response){
+                    console.log(response);
+                    $(".canbtn").click();
+                    render();
+                }
+            })
+        }else{
+            let data=$(".addbox form").serialize();
+            data+=`&id=${$(".savebtn").data("id")}`;
+            $.ajax({
+                url:"/index/update",
+                data:data,
+                type:"get",
+                success:function(response){
+                    console.log(response);
+                    $(".canbtn").click();
+                    render();
+                }
+            })
+        }
+    })
+
+    
+    
+
+    //渲染列表
+    function render() {  
+        $.ajax({
+            url:"/index/find",
+            type:"get",
+            success:function(response){
+                let html="";
+                for(var i=0;i<response.list.length;i++){
+                    html+=`
+                    <tr data-id='${response.list[i]._id}'>
+                        <td>${response.list[i].name}</td>
+                        <td>${response.list[i].age}</td>
+                        <td>${response.list[i].sex}</td>
+                        <td>${response.list[i].phone}</td>
+                        <td>
+                            <a href="#" class="btn-success btn-sm">编辑</a>
+                            <a href="#" class="btn-danger btn-sm">删除</a>
+                        </td>
+                    </tr>`;
+                }
+                $(".listbox tbody").html(html);
+                
+            }
+        })
+    }
+    render();
+
+   
+});
+</script>
